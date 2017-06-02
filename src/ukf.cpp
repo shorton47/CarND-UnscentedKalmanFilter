@@ -23,6 +23,9 @@ int num_sigma_pts;
 // Sigma point spreading parameter
 double lambda;
 
+// Epsilon for near zero tests
+const double EPS = 1.0e-15;
+
 
 
 
