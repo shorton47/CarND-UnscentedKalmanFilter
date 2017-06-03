@@ -66,6 +66,49 @@ public:
 
   ///* Sigma point spreading parameter
   double lambda_;
+    
+  // New Stuff
+// State dimension
+    //int n_x_ = 5;
+    
+    // Augmented state dimension
+    //int n_aug_ = 7;
+    
+    
+    
+    // Class variables not currently in .h file... <TODO> CHECK ON THIS
+    long stepnum_;             // Keep track of each step in KF
+    long previous_timestamp_;  // Keep track of previous time to calc delta time between measurement points
+    
+    // Number of sigma points (following convention)
+    //int num_sigma_pts;
+    
+    // Sigma point spreading parameter
+    //double lambda;
+    
+    // Epsilon for near zero tests
+    //const double EPS_;
+    
+    // Number of sigma points (following convention)
+    //int num_sigma_pts;
+    int num_sigma_pts_;
+    
+    // Sigma point spreading parameter
+    //double lambda_;
+    
+    // More time
+    //double dt,dt2;
+    
+    
+    // Augmented State vector
+    VectorXd x_aug_;
+    MatrixXd P_aug_;
+    //create sigma point matrix
+    MatrixXd Xsig_aug_;
+    //MatrixXd Xsig_pred_;
+    
+    
+    
 
 
   /**
