@@ -109,6 +109,11 @@ public:
     
     
     
+    //set measurement dimension, radar can measure r, phi, and r_dot
+    int n_z_;
+    
+    // KF - Measurement Noise Covariance matrix
+    MatrixXd R_;
 
 
   /**
