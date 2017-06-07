@@ -37,15 +37,17 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     rmse = rmse.array().sqrt();
     
     return rmse;
+}
+
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    return rmse;
+double Tools::NormalizeAngle(double angle) {
+        if (angle > M_PI) {
+            double temp = fmod((angle - M_PI), (2 * M_PI)); // -= 2. * M_PI;
+            angle = temp - M_PI;
+        } // phi normalization
+        if (angle < -M_PI) {
+            double temp = fmod((angle + M_PI) ,(2 * M_PI));
+            angle = temp + M_PI;
+        }
+        return angle;
 }
