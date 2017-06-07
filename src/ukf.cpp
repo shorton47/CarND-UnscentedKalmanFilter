@@ -130,10 +130,10 @@ UKF::UKF() {
     //time_us_ = 0;
 
     // Process noise standard deviation longitudinal acceleration in m/s^2
-    std_a_ = 0.9; // 2.0 was 30
+    std_a_ = 1.0; // 0.9 2.0 was 30
 
     // Process noise standard deviation yaw acceleration in rad/s^2
-    std_yawdd_ = 0.4; // 3.0 was 30
+    std_yawdd_ = 0.50; // 0.4 3.0 was 30
 
     //---
     // All measurement noise provided by manufacturer
@@ -640,15 +640,15 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
         VectorXd z_diff = Zsig.col(j) - z_pred;
         
         //angle normalization check
-        //while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-        //while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+        while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
+        while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
         
         // state difference
         VectorXd x_diff = Xsig_pred_.col(j) - x_;
         
         //angle normalization check
-        //while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-        //while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+        while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+        while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
         
         Tc += weights_(j) * x_diff * z_diff.transpose();
     }
@@ -665,14 +665,19 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     
     //create example vector for incoming radar measurement
     VectorXd z = VectorXd(n_z_);
-    z << Zsig(0,0), Zsig(1,0) , Zsig(2,0); // 1st Sigma Point is incoming Radar point converted to rho, phi, phidot
+    // BIG EXPERIMENT
+    //z << Zsig(0,0), Zsig(1,0) , Zsig(2,0); // 1st Sigma Point is incoming Radar point converted to rho, phi, phidot
+    
+    z = meas_package.raw_measurements_;  //Try using latest raw input measurement for z
     
     //residual
     VectorXd z_diff = z - z_pred;  // <TODO> WHAT IS Z ????????????
+    cout << "z,z_pred,diff=" << z << " " << z_pred << " " << z_diff << "\n";
+    
     
     //angle normalization
-    //while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-    //while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+    while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
+    while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
     
     // Update State Mean & Covariance matrix
     x_ = x_ + K * z_diff;
