@@ -8,14 +8,6 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-
-//
-// <TODO> Probably need to move all this to .h file!!!!!!
-//
-
-
-
-
 //---
 // Constructor - Initializes Unscented Kalman filter
 //---
@@ -130,10 +122,10 @@ UKF::UKF() {
     //time_us_ = 0;
 
     // Process noise standard deviation longitudinal acceleration in m/s^2
-    std_a_ = 1.0; // 0.9 2.0 was 30
+    std_a_ = 7.0; // 1.0 0.9 2.0 was 30
 
     // Process noise standard deviation yaw acceleration in rad/s^2
-    std_yawdd_ = 0.50; // 0.4 3.0 was 30
+    std_yawdd_ = 3.0; // 0.50 0.4 3.0 was 30
 
     //---
     // All measurement noise provided by manufacturer
@@ -369,9 +361,9 @@ void UKF::Prediction(double delta_t) {
    
    */
     
-    //---
-    // Step 1. - Generate Sigma Points (Augmented with process noise)
-    //---
+    //----------
+    // # 1. - Generate Sigma Points (augmented with process noise)
+    //----------
     // CTRV Model !! 5 component state vector turning rate and velocity are constant. Augmented state is 7 compoentns
     // Create Augmented State mean
     x_aug_.head(n_x_) = x_;                    // x_ is the previous state (before the new measurement update that has just come in)
@@ -407,9 +399,9 @@ void UKF::Prediction(double delta_t) {
     }
     cout << "Xsig_aug=\n" << Xsig_aug_ << "\n";
 
-    //---
-    // Step 2. - Predict Sigma Points
-    //---
+    //----------
+    // #2. - Predict Sigma Points
+    //----------
     
     //double delta_t = 0.1; //time diff in sec
     //create matrix with predicted sigma points as columns
@@ -458,12 +450,11 @@ void UKF::Prediction(double delta_t) {
     
     
 
-    //---
-    // Step 3A. - Predict State Mean & State Covariance matrix of Kalman Filter Equations
-    //---
-    //---
+    //----------
+    // # 3 - Predict State Mean Vector (x_) & State Covariance Matrix (P_) w/ Unscented Kalman Filter Equations
+    //----------
+    
     // Calc Predicted State Mean (weighted)
-    //---
     x_.fill(0.0); // Note: current x_ has already been captured in the sigman points, so just zeroing out for new sum
     for (int j=0; j<num_sigma_pts_; j++) {  //iterate over sigma points (cols of matrix)
         x_ +=  weights_(j) * Xsig_pred_.col(j);
@@ -478,12 +469,12 @@ void UKF::Prediction(double delta_t) {
     x_diff.fill(0.0);
     for (int j = 0; j <num_sigma_pts_; j++) {  //iterate over sigma points
         
-        // state difference
+        // State Vector difference (Pred - current)
         x_diff = Xsig_pred_.col(j) - x_ ;
         
         // CHECK angle normalization?? (for phi)
-        while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-        while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+        //while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+        //while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
         
         P_ += weights_(j) * x_diff * x_diff.transpose() ;
     }
@@ -613,8 +604,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
         VectorXd z_diff = Zsig.col(j) - z_pred;
             
         //Note: Check angle normalization
-        while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-        while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+        //while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
+        //while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
             
         S += (weights_(j) * z_diff * z_diff.transpose()) ;
     }
@@ -640,15 +631,15 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
         VectorXd z_diff = Zsig.col(j) - z_pred;
         
         //angle normalization check
-        while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-        while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+        //while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
+        //while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
         
         // state difference
         VectorXd x_diff = Xsig_pred_.col(j) - x_;
         
         //angle normalization check
-        while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-        while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+        //while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
+        //while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
         
         Tc += weights_(j) * x_diff * z_diff.transpose();
     }
@@ -676,8 +667,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     
     
     //angle normalization
-    while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-    while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+    //while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
+    //while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
     
     // Update State Mean & Covariance matrix
     x_ = x_ + K * z_diff;
@@ -687,8 +678,8 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     //---
     // Step Prologue. - Calculate Radar NIS
     //---
-
-    
+    double radar_NIS = z_diff.transpose() * S.inverse() * z_diff;
+    cout << "Radar NIS=" << radar_NIS << endl;
     
     return;
     
