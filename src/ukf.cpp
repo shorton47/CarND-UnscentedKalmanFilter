@@ -32,23 +32,15 @@ UKF::UKF() {
     n_x_   = 5;  // State dimension
     n_aug_ = 7;  // Augmented state dimension
     
-    num_sigma_pts_ = (2 * n_aug_) + 1;   // Number of sigma points (following convention)
-    lambda_ = 3 - n_aug_;   // Sigma point spreading parameter
+    num_sigma_pts_ = (2 * n_aug_) + 1;  // Number of sigma points (following convention)
+    lambda_ = 3 - n_aug_;               // Sigma point spreading parameter
     
     // Class variables not currently in .h file... <TODO> CHECK ON THIS
     stepnum_ = 0;             // Keep track of each step in KF
-    previous_timestamp_ = 0;  // Keep track of previous time to calc delta time between measurement points
+    previous_timestamp_ = 0;  // Keep track of previous data points time step to calc delta time between measurement points
     
-    // Number of sigma points (following convention)
-    //int num_sigma_pts;
-    
-    // Sigma point spreading parameter
-    //double lambda;
-    
-   
-    
-   
-    
+
+
     // More time
     //double dt,dt2;
     
@@ -108,27 +100,23 @@ UKF::UKF() {
     Xsig_aug_.fill(0.0);
     
     
-    // Weights for sigma points
+    // Pre-compute fixed weights for sigma points
     // <TODO> Gonna need to move to .h!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     weights_ = VectorXd(num_sigma_pts_);
     weights_(0) = lambda_ /(lambda_ + n_aug_);
     for (int i=1; i<num_sigma_pts_; i++) {
         weights_(i) = 0.5 / (n_aug_ + lambda_);
     }
-    //cout << "Constructor: weights=" << weights_ << endl;
     
-    
-    ///* time when the state is true, in us <TODO> (??? - from .h file)
-    //time_us_ = 0;
 
     // Process noise standard deviation longitudinal acceleration in m/s^2
-    std_a_ = 7.0; // 1.0 0.9 2.0 was 30
+    std_a_ = 0.50; // 1.0 0.9 2.0 was 30
 
     // Process noise standard deviation yaw acceleration in rad/s^2
-    std_yawdd_ = 3.0; // 0.50 0.4 3.0 was 30
+    std_yawdd_ = .25; // 0.50 0.4 3.0 was 30
 
     //---
-    // All measurement noise provided by manufacturer
+    // Measurement device noise(s) provided by manufacturer
     //---
     // Laser measurement noise standard deviation position1 in m
     std_laspx_ = 0.15;
@@ -509,6 +497,32 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
     //---
     // Step 2. - Update State w/ Kalman Filter Equations
     //---
+    
+    /*
+    // Update the state by using Kalman Filter equations
+    z_pred = H_ * x_;
+    y = z - z_pred;
+    Ht = H_.transpose();
+    PHt = P_ * Ht;
+    S = H_ * PHt + R_;  //S = H_ * P_ * Ht + R_;
+    Si = S.inverse();
+    K = PHt * Si;       // PHt = P_ * Ht;
+    
+    // New estimates (x_,P_)
+    x_ = x_ + (K * y);
+   
+    long x_size = x_.size();
+    I = MatrixXd::Identity(x_size, x_size);
+    P_ = (I - K * H_) * P_;
+    
+    //Debug
+    std::cout << "After Update x_=\n" << x_ << "\n";
+    std::cout << "After Update P_=\n" << P_ << "\n";
+    */
+    
+    
+    
+    
     
     
     //---
