@@ -1,6 +1,7 @@
 #include "ukf.h"
 #include "Eigen/Dense"
 #include <iostream>
+#include <iomanip>
 
 using namespace std;
 
@@ -13,6 +14,10 @@ using std::vector;
 //---
 UKF::UKF() {
 
+    
+    //std::setw(9);
+    //std::setprecision(4);
+    
     //---
     // BOOLEAN program controls
     //---
@@ -134,7 +139,7 @@ UKF::UKF() {
     std_radrd_ = 0.3;
     
     
-    //set measurement dimension, radar can measure r, phi, and r_dot
+    //set measurement dimension, radar can measure rho, phi, and rho_dot
     n_z_ = 3;
     
     // Measurement noise covariance matrix
@@ -206,8 +211,8 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
             //Hj_ = tools.CalculateJacobian(ekf_.x_);  // Initialize Jacobian Hj_ w/ 1st point
             
             // Debug
-            cout << "----------\n";
-            cout << "UKF: Step #" << stepnum_ << "\n";
+            //if (DEBUG_) cout << "----------\n";
+            cout << "----- UKF: Step #" << stepnum_ << "-----\n";
             cout << "Init measurement is RADAR: rho,phi,rhodot=: " << rho << " " << phi << " " << rhodot << endl;
             cout << "Init measurement is RADAR: px,py: " << px << " "<< py << endl;
 
@@ -320,12 +325,17 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
         
     } else {
         cout << "----------\n";
-        cout << "UKF: Step #" << stepnum_ << " Skipping point" << "\n";
-        cout << "No UKF update: x_= \n" << x_ << endl;
-        cout << "No UKF update: P_= \n" << P_ << endl;
+        if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
+            cout << "----- UKF: Step #" << stepnum_ << " Skipping LASER point" << "-----\n";
+        } else {
+            cout << "----- UKF: Step #" << stepnum_ << " Skipping RADAR point" << "-----\n";
+
+        }
+        
+        //cout << "No UKF update: x_= \n" << x_ << endl;
+        //cout << "No UKF update: P_= \n" << P_ << endl;
     }
     
-   
     return;
     
 } // ProcessMeasurement
@@ -385,8 +395,22 @@ void UKF::Prediction(double delta_t) {
         Xsig_aug_.col(i+1)        = x_aug_ + sqrt(lambda_ + n_aug_) * L.col(i);
         Xsig_aug_.col(i+1+n_aug_) = x_aug_ - sqrt(lambda_ + n_aug_) * L.col(i);
     }
-    cout << "Xsig_aug=\n" << Xsig_aug_ << "\n";
-
+    
+    //cout << "Xsig_aug=\n" << Xsig_aug_ << "\n";
+    PrintEigenMatrix("Xsig_aug=",&Xsig_aug_);
+    
+    /*
+    cout << "Xsig_aug=\n";
+    for (int i=0; i< Xsig_aug_.rows(); i++) {
+        for (int j=0; j<Xsig_aug_.cols(); j++) {
+            cout << setw(6) << setprecision(3) << Xsig_aug_(i,j);
+        }
+        cout << endl;
+    }
+    */
+    
+    
+    
     //----------
     // #2. - Predict Sigma Points
     //----------
@@ -536,9 +560,6 @@ void UKF::UpdateLidar(MeasurementPackage meas_package) {
 
 
 
-
-
-
 /**
  * Updates the state and the state covariance matrix using a radar measurement.
  * @param {MeasurementPackage} meas_package
@@ -560,14 +581,7 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
 
     //create example matrix with predicted sigma points
     //MatrixXd Xsig_pred = MatrixXd(n_x, 2 * n_aug + 1);
-    /*
-    Xsig_pred <<
-    5.9374,  6.0640,   5.925,  5.9436,  5.9266,  5.9374,  5.9389,  5.9374,  5.8106,  5.9457,  5.9310,  5.9465,  5.9374,  5.9359,  5.93744,
-    1.48,  1.4436,   1.660,  1.4934,  1.5036,    1.48,  1.4868,    1.48,  1.5271,  1.3104,  1.4787,  1.4674,    1.48,  1.4851,    1.486,
-    2.204,  2.2841,  2.2455,  2.2958,   2.204,   2.204,  2.2395,   2.204,  2.1256,  2.1642,  2.1139,   2.204,   2.204,  2.1702,   2.2049,
-    0.5367, 0.47338, 0.67809, 0.55455, 0.64364, 0.54337,  0.5367, 0.53851, 0.60017, 0.39546, 0.51900, 0.42991, 0.530188,  0.5367, 0.535048,
-    0.352, 0.29997, 0.46212, 0.37633,  0.4841, 0.41872,   0.352, 0.38744, 0.40562, 0.24347, 0.32926,  0.2214, 0.28687,   0.352, 0.318159;
-    */
+    
     //create matrix for sigma points in measurement space
     MatrixXd Zsig = MatrixXd(n_z_, 2 * n_aug_ + 1);
     
@@ -698,3 +712,18 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     return;
     
 }  // UpdateRadar
+
+//
+// Utility Method to print a MatrixXd to cout
+//
+void UKF::PrintEigenMatrix(string label, MatrixXd *mat) {
+
+    cout << label << endl;
+    for (int i=0; i< mat->rows(); i++) {
+        for (int j=0; j< mat->cols(); j++) {
+            cout << setw(6) << setprecision(3) << (*mat)(i,j);
+        }
+        cout << endl;
+    }
+    return;
+}

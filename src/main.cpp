@@ -7,6 +7,7 @@
 
 using namespace std;
 
+extern bool DEBUG_ = true;
 
 // for convenience
 using json = nlohmann::json;
