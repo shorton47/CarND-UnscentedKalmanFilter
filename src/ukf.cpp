@@ -1,3 +1,18 @@
+//--------------------------------------------------------------------------------------------------------------
+//
+//
+// CTRV Model !! 5 component state vector turning rate and velocity are constant. Augmented state is 7 compoentns
+
+// Conventions:
+// i = row, j = column
+// _ means a Class level variable
+
+// Commented out "angle normalization as I am not convinced it is needed. Double precision calc should be ok.
+//  Lab is woring fine without it
+//
+//--------------------------------------------------------------------------------------------------------------
+
+
 #include "ukf.h"
 #include "Eigen/Dense"
 #include <iostream>
@@ -9,9 +24,9 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-//---
+//----------
 // Constructor - Initializes Unscented Kalman filter
-//---
+//----------
 UKF::UKF() {
 
     
@@ -148,6 +163,13 @@ UKF::UKF() {
                             0, std_radphi_*std_radphi_,                     0,
                             0,                       0, std_radrd_*std_radrd_;
     
+    // Process Noise - 2 elements, stda,
+    n_Q_ = 2;
+    Q_ = MatrixXd(n_Q_,n_Q_);
+    Q_ << std_a_*std_a_,                     0,
+                      0, std_yawdd_*std_yawdd_;
+
+    
     
 
   /**
@@ -160,9 +182,9 @@ UKF::UKF() {
 }
 
 
-//---
+//----------
 // Destructor
-//---
+//----------
 UKF::~UKF() {}
 
 
@@ -341,87 +363,47 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 } // ProcessMeasurement
 
 
-/**
- * Predicts sigma points, the state, and the state covariance matrix.
- * @param {double} delta_t the change in time (in seconds) between the last
- * measurement and this one.
- */
+//---------------
+// Predicition Step of Unscented Kalman Filter (UKF). Predicts the State Mean and State Covariance Matrix using Sigma Points.
+// * @param {double} delta_t the change in time (in seconds) between the last measurement and this one.
+//---------------
 void UKF::Prediction(double delta_t) {
   
-  /**
-  TODO:
-
-  Complete this function! Estimate the object's location. Modify the state
-  vector, x_. Predict sigma points, the state, and the state covariance matrix.
-  
-   Make sure to update F & Q before running Kalman equations
-   
-   
-   */
-    
     //----------
-    // # 1. - Generate Sigma Points (augmented with process noise)
+    // #1. Generate Sigma Points (augmented with process noise)
     //----------
-    // CTRV Model !! 5 component state vector turning rate and velocity are constant. Augmented state is 7 compoentns
-    // Create Augmented State mean
-    x_aug_.head(n_x_) = x_;                    // x_ is the previous state (before the new measurement update that has just come in)
-    //x_aug_(n_aug_-2) = std_a_*std_a_;          // Assume acceleration process noise is fixed
-    //x_aug_(n_aug_-1) = std_yawdd_*std_yawdd_ ; // Assume angle acceleration process noise is fixed
-    x_aug_(n_aug_-2) = 0;          // Assume acceleration process noise is fixed
-    x_aug_(n_aug_-1) = 0; // Assume angle acceleration process noise is fixed
+   
+    // Create Augmented State Mean
+    x_aug_.head(n_x_) = x_;  // x_ is the previous state (before the new measurement update that has just come in)
+    x_aug_(n_aug_-2)  = 0;   // Assume acceleration process noise is zero
+    x_aug_(n_aug_-1)  = 0;   // Assume angle acceleration process noise is zero
     
-    std::cout << "x_aug=\n" << x_aug_ << "\n";
+    //Create Augmented Covariance Matrix
+    P_aug_.fill(0.0);
+    P_aug_.topLeftCorner(n_x_, n_x_) = P_;  // State covariance matrix P is top-left
+    P_aug_.bottomRightCorner(2,2) = Q_;     // Process noise covariance matrix Q is bottom-right
     
-    //create augmented covariance matrix
-    P_aug_.fill(0.0);                               // Initialize full matrix to zero
-    P_aug_.topLeftCorner(n_x_, n_x_) = P_;             // Standard P covariance matx is top-left
-    P_aug_(n_aug_-2, n_aug_-2) = std_a_*std_a_;          // Augment bot-right Q matrix w/ variances
-    P_aug_(n_aug_-1, n_aug_-1) = std_yawdd_*std_yawdd_;  // Augment bot-right Q matrix w/ variances
-    std::cout << "P_aug=\n" << P_aug_ << "\n";
-    
-    //create square root of augmented covariance (P) matrix
+    // Square root of augmented covariance matrix
     MatrixXd L = P_aug_.llt().matrixL();
-    std::cout << "L=\n" << L << "\n";
     
-    //---
-    // Step 1. - Create Sigma Points (augmented)
-    //---
-    // 1st column of sigma point matrix
-    Xsig_aug_.col(0)  = x_aug_;
-    
-    // Set remaining sigma points
-    for (int i = 0; i < n_aug_; i++)
-    {
-        Xsig_aug_.col(i+1)        = x_aug_ + sqrt(lambda_ + n_aug_) * L.col(i);
+    // Create Sigma Point Matrix (Augmented)
+    Xsig_aug_.col(0)  = x_aug_;  // 1st col of sigma points in matrix is State vector
+    for (int i = 0; i < n_aug_; i++) {
+        Xsig_aug_.col(i+1)        = x_aug_ + sqrt(lambda_ + n_aug_) * L.col(i);  // Col vector add
         Xsig_aug_.col(i+1+n_aug_) = x_aug_ - sqrt(lambda_ + n_aug_) * L.col(i);
     }
     
-    //cout << "Xsig_aug=\n" << Xsig_aug_ << "\n";
+    PrintEigenColVector("a_aug=",&x_aug_);
+    PrintEigenMatrix("P_aug=",&P_aug_);
+    PrintEigenMatrix("L=",&P_aug_);
     PrintEigenMatrix("Xsig_aug=",&Xsig_aug_);
     
-    /*
-    cout << "Xsig_aug=\n";
-    for (int i=0; i< Xsig_aug_.rows(); i++) {
-        for (int j=0; j<Xsig_aug_.cols(); j++) {
-            cout << setw(6) << setprecision(3) << Xsig_aug_(i,j);
-        }
-        cout << endl;
-    }
-    */
-    
-    
-    
     //----------
-    // #2. - Predict Sigma Points
+    // #2. Predict Sigma Points
     //----------
-    
-    //double delta_t = 0.1; //time diff in sec
-    //create matrix with predicted sigma points as columns
-    
-    // Xsig_aug is x at K, Xsig_pred is x at k+1
     double delta_t2 = delta_t*delta_t;
     
-    // For each column vector sigma point j of Xsig_aug
+    // For each column vector of Xsig_pred from Xsig_aug
     for (int j=0; j<num_sigma_pts_; j++) {
         
         double px     = Xsig_aug_(0,j);
@@ -432,10 +414,9 @@ void UKF::Prediction(double delta_t) {
         double nua    = Xsig_aug_(5,j);
         double nuphia = Xsig_aug_(6,j);
         
-        // Check is phidot is near zero to avoid div by zero
+        // Check if phidot is near zero to avoid div by zero
         if (fabs(phidot) > __DBL_EPSILON__) {
             
-            cout<< "phidot not near zero & eps=" << phidot << " " << __DBL_EPSILON__ << "\n";
             // Process equations w/ sigma points
             Xsig_pred_(0,j) = px     + (v/phidot) * (sin(phi+(phidot*delta_t)) - sin(phi)) \
                                      + 0.5*delta_t2*cos(phi)*nua;
@@ -448,115 +429,48 @@ void UKF::Prediction(double delta_t) {
         } else {
             
             // Process equations w/ sigma points when phidot zero
-            cout<< "phidot near zero (!) & eps=" << phidot << " " << __DBL_EPSILON__ << "\n";
             Xsig_pred_(0,j) = px     + v*cos(phi)*delta_t + 0.5*delta_t2*cos(phi)*nua;
             Xsig_pred_(1,j) = py     + v*sin(phi)*delta_t + 0.5*delta_t2*sin(phi)*nua;
             Xsig_pred_(2,j) = v      + 0 + delta_t*nua;
             Xsig_pred_(3,j) = phi    + 0 + 0.5*delta_t2*nuphia;
             Xsig_pred_(4,j) = phidot + 0 + delta_t*nuphia;
-            
         }
-        
     }
-    cout << "Xsig_pred=\n" << Xsig_pred_ << "\n";
     
+    PrintEigenMatrix("Xsig_pred_=",&Xsig_pred_);
     
-
     //----------
-    // # 3 - Predict State Mean Vector (x_) & State Covariance Matrix (P_) w/ Unscented Kalman Filter Equations
+    // #3. Predict State Mean Vector (x_) & State Covariance Matrix (P_) w/ Unscented Kalman Filter Equations
     //----------
     
-    // Calc Predicted State Mean (weighted)
-    x_.fill(0.0); // Note: current x_ has already been captured in the sigman points, so just zeroing out for new sum
-    for (int j=0; j<num_sigma_pts_; j++) {  //iterate over sigma points (cols of matrix)
-        x_ +=  weights_(j) * Xsig_pred_.col(j);
+    // Calc Predicted State Mean x_ (weighted)
+    x_.fill(0.0);  // Note: current x_ has already been captured in sigma points, so zeroing out for new sum
+    for (int j=0; j<num_sigma_pts_; j++) {
+        x_ +=  weights_(j) * Xsig_pred_.col(j);  // Col vector mult & add
     }
     
     //---
-    // Step 3B. - Calc Predicted State Covariance Matrix
+    // Calc Predicted State Covariance Matrix P_ (weighted)
     //---
-    P_.fill(0.0);  // Note: current P_ has already been captured in the sigman points, so just zeroing out for new sum
-
     VectorXd x_diff(num_sigma_pts_);
-    x_diff.fill(0.0);
-    for (int j = 0; j <num_sigma_pts_; j++) {  //iterate over sigma points
+    
+    P_.fill(0.0);  // Note: current P_ has already been captured in sigma points, so zeroing out for new sum
+    for (int j = 0; j <num_sigma_pts_; j++) {
         
-        // State Vector difference (Pred - current)
-        x_diff = Xsig_pred_.col(j) - x_ ;
-        
-        // CHECK angle normalization?? (for phi)
+        x_diff = Xsig_pred_.col(j) - x_ ;  // State Vector difference (Current - Pred)!
+
+        // Angle normalization for phidot (? not needed)
         //while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
         //while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
         
-        P_ += weights_(j) * x_diff * x_diff.transpose() ;
+        P_ += weights_(j) * x_diff * x_diff.transpose();
     }
 
-    // Debug - This is Prediction of x_ & P_ given state before measurement update
-    cout << "Predict x_=\n" << x_ << "\n";
-    cout << "Predict P_=\n" << P_ << "\n";
-
+    // Debug (prediction of x_ & P_ before measurement update)
+    PrintEigenColVector("x_=",&x_);
+    PrintEigenMatrix("P_=",&P_);
     return;
-}
-
-/**
- * Updates the state and the state covariance matrix using a laser measurement.
- * @param {MeasurementPackage} meas_package
- */
-void UKF::UpdateLidar(MeasurementPackage meas_package) {
-  /**
-  TODO:
-
-  Complete this function! Use lidar data to update the belief about the object's
-  position. Modify the state vector, x_, and covariance, P_.
-
-  You'll also need to calculate the lidar NIS.
-  */
-    
-    
-    //---
-    // Step 1. - Predict Measurement using predicted measurement & existing sigma points
-    //---
-    
-    
-    //---
-    // Step 2. - Update State w/ Kalman Filter Equations
-    //---
-    
-    /*
-    // Update the state by using Kalman Filter equations
-    z_pred = H_ * x_;
-    y = z - z_pred;
-    Ht = H_.transpose();
-    PHt = P_ * Ht;
-    S = H_ * PHt + R_;  //S = H_ * P_ * Ht + R_;
-    Si = S.inverse();
-    K = PHt * Si;       // PHt = P_ * Ht;
-    
-    // New estimates (x_,P_)
-    x_ = x_ + (K * y);
-   
-    long x_size = x_.size();
-    I = MatrixXd::Identity(x_size, x_size);
-    P_ = (I - K * H_) * P_;
-    
-    //Debug
-    std::cout << "After Update x_=\n" << x_ << "\n";
-    std::cout << "After Update P_=\n" << P_ << "\n";
-    */
-    
-    
-    
-    
-    
-    
-    //---
-    // Step Prologue. - Calculate Lidar NIS
-    //---
-    
-    
-    
-    return;
-}  // UpdateLidar
+} // Prediction
 
 
 
@@ -713,17 +627,94 @@ void UKF::UpdateRadar(MeasurementPackage meas_package) {
     
 }  // UpdateRadar
 
-//
-// Utility Method to print a MatrixXd to cout
-//
+/**
+ * Updates the state and the state covariance matrix using a laser measurement.
+ * @param {MeasurementPackage} meas_package
+ */
+void UKF::UpdateLidar(MeasurementPackage meas_package) {
+    /**
+     TODO:
+     
+     Complete this function! Use lidar data to update the belief about the object's
+     position. Modify the state vector, x_, and covariance, P_.
+     
+     You'll also need to calculate the lidar NIS.
+     */
+    
+    
+    //---
+    // Step 1. - Predict Measurement using predicted measurement & existing sigma points
+    //---
+    
+    
+    //---
+    // Step 2. - Update State w/ Kalman Filter Equations
+    //---
+    
+    /*
+     // Update the state by using Kalman Filter equations
+     z_pred = H_ * x_;
+     y = z - z_pred;
+     Ht = H_.transpose();
+     PHt = P_ * Ht;
+     S = H_ * PHt + R_;  //S = H_ * P_ * Ht + R_;
+     Si = S.inverse();
+     K = PHt * Si;       // PHt = P_ * Ht;
+     
+     // New estimates (x_,P_)
+     x_ = x_ + (K * y);
+     
+     long x_size = x_.size();
+     I = MatrixXd::Identity(x_size, x_size);
+     P_ = (I - K * H_) * P_;
+     
+     //Debug
+     std::cout << "After Update x_=\n" << x_ << "\n";
+     std::cout << "After Update P_=\n" << P_ << "\n";
+     */
+    
+    
+    
+    
+    
+    
+    //---
+    // Step Prologue. - Calculate Lidar NIS
+    //---
+    
+    
+    
+    return;
+}  // UpdateLidar
+
+
+
+
+
+//----------
+// Utility Methods for UKF
+//----------
 void UKF::PrintEigenMatrix(string label, MatrixXd *mat) {
 
     cout << label << endl;
     for (int i=0; i< mat->rows(); i++) {
         for (int j=0; j< mat->cols(); j++) {
-            cout << setw(6) << setprecision(3) << (*mat)(i,j);
+            cout << setw(12) << setprecision(4) << (*mat)(i,j);
         }
         cout << endl;
     }
     return;
 }
+
+void UKF::PrintEigenColVector(string label, VectorXd *vector) {
+    
+    cout << label << endl;
+    for (int i=0; i< vector->rows(); i++) {
+            cout << setw(14) << setprecision(8) << (*vector)(i);
+        cout << endl;
+        }
+    return;
+}
+
+
+

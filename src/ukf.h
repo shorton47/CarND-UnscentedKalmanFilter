@@ -115,6 +115,10 @@ public:
     // KF - Measurement Noise Covariance matrix
     MatrixXd R_;
 
+    // Process Noise
+    int n_Q_;
+    MatrixXd Q_;
+    
 
   /**
    * Constructor
@@ -154,6 +158,8 @@ public:
     
     
     void PrintEigenMatrix(std::string label, MatrixXd *mat);
+    
+    void PrintEigenColVector(std::string label, VectorXd *vector);
 
 };
 #endif /* UKF_H */
