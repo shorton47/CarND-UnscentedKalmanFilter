@@ -119,6 +119,10 @@ public:
     int n_Q_;
     MatrixXd Q_;
     
+    
+    MatrixXd R_laser_;
+    
+    
 
   /**
    * Constructor
@@ -147,7 +151,7 @@ public:
    * Updates the state and the state covariance matrix using a laser measurement
    * @param meas_package The measurement at k+1
    */
-  void UpdateLidar(MeasurementPackage meas_package);
+  void UpdateLaser(MeasurementPackage meas_package);
 
   /**
    * Updates the state and the state covariance matrix using a radar measurement
