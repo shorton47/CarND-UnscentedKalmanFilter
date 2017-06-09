@@ -29,10 +29,6 @@ using std::vector;
 //----------
 UKF::UKF() {
 
-    
-    //std::setw(9);
-    //std::setprecision(4);
-    
     //---
     // BOOLEAN program controls
     //---
