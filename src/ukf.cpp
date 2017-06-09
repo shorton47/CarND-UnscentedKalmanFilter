@@ -43,7 +43,7 @@ UKF::UKF() {
     use_laser_ = true;
 
     // If this is false, radar measurements will be ignored (except during init)
-    use_radar_ = false;
+    use_radar_ = true;
 
     //---
     // State Space
@@ -170,7 +170,7 @@ UKF::UKF() {
                       0, std_yawdd_*std_yawdd_;
 
     // Measurement noise covariance matrix
-    MatrixXd R_laser_ = MatrixXd(2,2);
+    R_laser_ = MatrixXd(2,2);
     R_laser_ << std_laspx_*std_laspx_,                     0,
                                     0, std_laspy_*std_laspy_;
     
