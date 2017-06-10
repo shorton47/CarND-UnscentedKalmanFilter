@@ -68,23 +68,12 @@ UKF::UKF() {
     // Initial covariance matrix
     P_ = MatrixXd(n_x_, n_x_);
     P_.Identity(n_x_, n_x_);
-    //P_ << 1.0, 0.0, 0.0, 0.0, 0.0,
-    //      0.0, 1.0, 0.0, 0.0, 0.0,
-    //      0.0, 0.0, 1.0, 0.0, 0.0,
-    //      0.0, 0.0, 0.0, 1.0, 0.0,
-    //      0.0, 0.0, 0.0, 0.0, 1.0;
     
     // Augmented State covariance matrix
     P_aug_ = MatrixXd(7,7);
     P_aug_.Identity(n_aug_, n_aug_);
-    //P_aug_ << 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    //          0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-    //          0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
-    //          0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
-    //          0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-    //          0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-    //          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0;
-    
+   
+
     ///<TODO> FIGURE THIS OUT* predicted sigma points matrix
     //MatrixXd Xsig_pred_;
     //Xsig_pred_.fill(0.0); //?????
@@ -104,8 +93,7 @@ UKF::UKF() {
     Xsig_aug_.fill(0.0);
     
     
-    // Pre-compute fixed weights for sigma points
-    // <TODO> Gonna need to move to .h!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Pre-compute invarient weights for sigma points
     weights_ = VectorXd(num_sigma_pts_);
     weights_(0) = lambda_ /(lambda_ + n_aug_);
     for (int i=1; i<num_sigma_pts_; i++) {
