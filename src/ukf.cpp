@@ -1,17 +1,21 @@
 //--------------------------------------------------------------------------------------------------------------
+// THis is the main class for the Unscented Kalman Filter Project (UKF). THis takes the non-linear CTRV driving
+// model and implements at sensor fusion of both RADAR and LASER (Lidar) data to produce an optimal estimate
+// of the car path. There are 2 datasets and also ground truth data to compare results against to compute a
+// RMSE. This code communicates via WebSockets w/ Udacity's Car Simulator to run the vehicle and compute the
+// real-time results.
 //
+// This UKF is a 5 component state vector comprising of (px,py,v,yaw,yawdd) where turning rate and velocity are
+// assumed to be constant. Then an Augmented State is 7 components adding the Process Noise.
 //
-// CTRV Model !! 5 component state vector turning rate and velocity are constant. Augmented state is 7 compoentns
-
-// Conventions:
-// i = row, j = column
-// _ means a Class level variable
-
-// Commented out "angle normalization as I am not convinced it is needed. Double precision calc should be ok.
-//  Lab is woring fine without it. I tried it both ways and not any better with all the checks.
+// Programming conventions:
+// i = row, j = column for EigenMatrix access
+// _ means a variable with Class level scope.
 //
+// Note: I have commented out the "angle normalization" code as I am not convinced it is needed. Double precision\
+// calculations should be fine for angle difference calculations where difference can be small. I tried it both ways
+// and results are same with ot without it.
 //--------------------------------------------------------------------------------------------------------------
-
 
 #include "ukf.h"
 #include "Eigen/Dense"
@@ -55,7 +59,6 @@ UKF::UKF() {
     stepnum_ = 0;             // Keep track of each step in KF
     previous_timestamp_ = 0;  // Keep track of previous data points time step to calc delta time between measurement points
     
-
     // Initial State vector
     x_ = VectorXd(n_x_);
     //x_ << 0.0, 0.0, 0.0, 0.0, 0.0;
@@ -73,15 +76,6 @@ UKF::UKF() {
     P_aug_ = MatrixXd(7,7);
     P_aug_.Identity(n_aug_, n_aug_);
    
-
-    ///<TODO> FIGURE THIS OUT* predicted sigma points matrix
-    //MatrixXd Xsig_pred_;
-    //Xsig_pred_.fill(0.0); //?????
-    
-    // Create sigma point matrix
-    // Note: currently (7,15)
-    //create sigma point matrix
-    
     
     // Predicted Sigma Points
     Xsig_pred_ = MatrixXd(n_x_, num_sigma_pts_);
@@ -92,7 +86,6 @@ UKF::UKF() {
     Xsig_aug_ = MatrixXd(n_aug_, num_sigma_pts_);
     Xsig_aug_.fill(0.0);
     
-    
     // Pre-compute invarient weights for sigma points
     weights_ = VectorXd(num_sigma_pts_);
     weights_(0) = lambda_ /(lambda_ + n_aug_);
@@ -100,13 +93,13 @@ UKF::UKF() {
         weights_(i) = 0.5 / (n_aug_ + lambda_);
     }
     
-
     // Process noise standard deviation longitudinal acceleration in m/s^2
     std_a_ = 2.0; // W=0.5 1.0 0.9 2.0 was 30
 
     // Process noise standard deviation yaw acceleration in rad/s^2
     std_yawdd_ = 0.875; // W=.875 W=.25 0.50 0.4 3.0 was 30
 
+    
     //---
     // Measurement device noise(s) provided by manufacturer
     //---
@@ -124,7 +117,6 @@ UKF::UKF() {
 
     // Radar measurement noise standard deviation radius change in m/s
     std_radrd_ = 0.3;
-    
     
     //set measurement dimension, radar can measure rho, phi, and rho_dot
     n_z_ = 3;
@@ -146,7 +138,6 @@ UKF::UKF() {
     R_laser_ << std_laspx_*std_laspx_,                     0,
                                     0, std_laspy_*std_laspy_;
     
-
 }
 
 
