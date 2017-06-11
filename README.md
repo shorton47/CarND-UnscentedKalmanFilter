@@ -1,5 +1,6 @@
-# CarND-ExtendedKalmanFilter Project
-## Stephen Horton, June 2017
+#CarND-ExtendedKalmanFilter Project
+Stephen Horton, June 2017
+
 ---
 This is a program that operates a non-linear Extended Kalman Filter (EKF) fusing both RADAR and LASER (Lidar) data together to get an optimal estimate using the CTRV model of to obtain estimate of a vehicle (or pedestrian) location. This program works in conjunction with Udacity's Simulator which it communicates over WebSocket. The simulator also contains ground truth data so an RMSE can be calculated and displayed to check accuracy. I obtains between 5-10cm accuracy for px,py on over both datasets.
 
