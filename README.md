@@ -1,6 +1,66 @@
 # Unscented Kalman Filter Project Starter Code
 Self-Driving Car Engineer Nanodegree Program
 
+# CarND-ExtendedKalmanFilter Project
+## Stephen Horton, June 2017
+---
+This is a program that operates a non-linear Extended Kalman Filter (EKF) fusing both RADAR and LASER (Lidar) data together to get an optimal estimate using the CTRV model of to obtain estimate of a vehicle (or pedestrian) location. This program works in conjunction with Udacity's Simulator which it communicates over WebSocket. The simulator also contains ground truth data so an RMSE can be calculated and displayed to check accuracy. I obtains between 5-10cm accuracy for px,py on over both datasets.
+
+[//]: # (Image References)
+
+[image1]: ./UKFSuccessDataset1.png "Result"
+[image2]: ./UKFSuccessDataset2.png "Result"
+
+[image3]: ./UKFBug1.png "Result"
+[image4]: ./UKFBug2.png "Result"
+
+
+After the UKF was working, I obtained the following results for both datasets:
+
+| Figure 8 Data (+x/+y start)            | Figure 8 Data (-x/+y start)     | 
+| :---:                                  |:---:                            |
+| ![alt text][image1]                    |  ![alt text][image2]            |
+
+
+
+It is worth noting that all parts of the Kalman Filter must be working robustly in order to get accurate results. Earlier in the development, I had a couple of bugs including not generating the sigma points properly, inserting the incoming sensor measurements (z) in the wrong place, and not re-initializing the augmented state vectors. In these cases, the state estimates can do some wacky things like:
+
+
+
+| Bug1 in UKF                            | Bug2 in UKF                     | 
+| :---:                                  |:---:                            |
+| ![alt text][image3]                    |  ![alt text][image4]            |
+
+
+
+It was very helpful that we had ground truth data to compare answers to in order to root out all the bugs and get a strong result.
+
+---
+
+## Environment to Compile Project
+This was developed on a Macbook Pro with the following configuration:
+* macOS Sierra 10.11
+* Xcode 8.2.1
+* Using uWebsockets for com w/ Udacity Simulator
+* which in turn needs Openssl 1.0.2
+
+*There is also a major dependency with the open source C++ library EIGEN which has the vector and Matrix data structues as well as all the overloaded operators for Matrix algebra for the Kalman Filter equations.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 In this project utilize an Unscented Kalman Filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project reburic. 
 
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
