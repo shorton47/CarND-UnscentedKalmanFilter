@@ -1,6 +1,3 @@
-# Unscented Kalman Filter Project Starter Code
-Self-Driving Car Engineer Nanodegree Program
-
 # CarND-ExtendedKalmanFilter Project
 ## Stephen Horton, June 2017
 ---
@@ -47,21 +44,9 @@ This was developed on a Macbook Pro with the following configuration:
 *There is also a major dependency with the open source C++ library EIGEN which has the vector and Matrix data structues as well as all the overloaded operators for Matrix algebra for the Kalman Filter equations.
 
 
+---
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-In this project utilize an Unscented Kalman Filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower that the tolerance outlined in the project reburic. 
+## Udacity Notes on this Project
 
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
 
